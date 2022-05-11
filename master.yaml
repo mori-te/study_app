@@ -1,0 +1,25 @@
+#
+# マスターデータ
+#
+LANG:
+  'java':
+  - 'javascript'
+  - 4
+  - |
+    class HelloWorld {
+        public static void main(String[] args) {
+            System.out.println("Hello Java World!!");
+        }
+    }
+
+  'ruby': 
+  - 'ruby'
+  - 2
+  - |
+    puts "Hello Ruby World!!"
+
+  'js':
+  - 'javascript'
+  - 4
+  - |
+    console.log("Hello JS World!");
