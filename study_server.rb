@@ -1,11 +1,10 @@
 #
 #
 # 簡易WEB学習サイトサーバ
-# bundle exec ruby study_server.rb  -o 0.0.0.0
-# bundle exec ruby study_server.rb -e test
 #
-require 'sinatra'
-require 'sinatra/reloader'
+#
+require 'sinatra'           # gem install sinatra webrick
+require 'sinatra/reloader'  # gem install sinatra-contrib
 require 'json'
 require 'yaml'
 require 'fileutils'
@@ -24,16 +23,14 @@ end
 # ruby実行・結果出力
 post '/exec_ruby' do
   json = JSON.parse(request.body.read)
-  user = json['user']
-  source_file = "/home/#{user}/#{user}.rb"
+  source_file = "source/#{json['user']}.rb"
   File.open(source_file, 'w') do |io|
     io.print(json['source'])
   end
-  FileUtils.chown(user, user, [source_file])
   result = nil
   begin
-    IO.popen(['su', '-', user, '-c', "ruby #{source_file}", :err => [:child, :out]], 'r') do |io|
-      result = io.read
+    IO.popen(['ruby', source_file, :err => [:child, :out]], 'r') do |io|
+      result = io.read.gsub(/^source\//, "")
     end
   rescue
     result = $!
@@ -44,46 +41,42 @@ end
 # java実行・結果出力
 post '/exec_java' do
   json = JSON.parse(request.body.read)
-  user = json['user']
   source_code = json['source']
   class_name = source_code.scan(/class (\w+)/)[0]
-  source_file = "/home/#{user}/#{class_name[0]}.java"
-  class_file = "/home/#{user}/#{class_name[0]}.class"
-  exec_name = File.basename(source_file, '.*')
+  source_file = "#{class_name[0]}.java"
 
-  File.open(source_file, 'w') do |io|
+  File.open("source/#{source_file}", 'w') do |io|
     io.print(json['source'])
   end
-  FileUtils.chown(user, user, [source_file])
-  begin
-    FileUtils.rm(class_file)
-  rescue
-  end
-
   result = ''
+  FileUtils.cd('source')
   begin
-    IO.popen(['su', '-', user, '-c', "javac #{source_file} && java #{exec_name}", :err => [:child, :out]], 'r') do |io|
+    IO.popen(["javac", source_file, :err => [:child, :out]], 'r') do |io|
       result = io.read
       result.force_encoding('CP932') if RUBY_PLATFORM =~ /mingw|mswin/
+    end
+    IO.popen(['java', source_file.sub(".java", ""), :err => [:child, :out]], 'r') do |io|
+      buf = io.read
+      buf.force_encoding('CP932') if RUBY_PLATFORM =~ /mingw|mswin/ # for Windows
+      result += buf
     end
   rescue
     result += $!.to_s
   end
+  FileUtils.cd('..')
   { result: result }.to_json
 end
 
 # javascript実行・結果出力
 post '/exec_js' do
   json = JSON.parse(request.body.read)
-  user = json['user']
-  source_file = "/home/#{user}/#{user}.js"
+  source_file = "source/#{json['user']}.js"
   File.open(source_file, 'w') do |io|
     io.print(json['source'])
   end
-  FileUtils.chown(user, user, [source_file])
   result = nil
   begin
-    IO.popen(['su', '-', user, '-c', "node #{source_file}", :err => [:child, :out]], 'r') do |io|
+    IO.popen(['node', source_file, :err => [:child, :out]], 'r') do |io|
       result = io.read
     end
   rescue

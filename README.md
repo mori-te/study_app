@@ -1,13 +1,29 @@
-# 起動方法
+# 起動手順
 
-linuxのrootで任意の場所にインストールしてください。  
-初期ユーザはmori-teになってます。（linux上に`adduser mori-te`してください）
+## インストール
 
-```shell
-bundle exec ruby study_server.rb -e test
-```
-suコマンドを使用しているのでwindowsでは動きません。
+https://rubyinstaller.org/downloads/ のRuby+Devkit 3.1.2-1 (x64) をインストールする。
+
+ライブラリをインストールするため以下を実行
 
 ```
-http://<ip address or FQDN>:4567/
+> gem install webrick
+> gem install sinatra
+> gem install sinatra-contrib
+```
+
+javaとnodejsもインストールする必要がある。
+
+
+## 起動方法
+
+```
+> mkdir source
+> ruby study_server.rb -e test
+```
+
+## アクセス
+
+```
+http://localhost:4567/
 ```
