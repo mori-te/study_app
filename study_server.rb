@@ -1,8 +1,6 @@
 #
 #
 # 簡易WEB学習サイトサーバ
-# ruby study_server -o 0.0.0.0
-# ruby study_server -e test
 # bundle exec ruby study_server.rb  -o 0.0.0.0
 # bundle exec ruby study_server.rb -e test
 #
@@ -57,8 +55,6 @@ post '/exec_java' do
     io.print(json['source'])
   end
   FileUtils.chown(user, user, [source_file])
-  p source_file
-  p exec_name
   begin
     FileUtils.rm(class_file)
   rescue
@@ -70,7 +66,6 @@ post '/exec_java' do
       result = io.read
       result.force_encoding('CP932') if RUBY_PLATFORM =~ /mingw|mswin/
     end
-    p result
   rescue
     result += $!.to_s
   end
