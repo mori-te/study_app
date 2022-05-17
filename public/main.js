@@ -9,6 +9,7 @@ var vm = new Vue({
         cmOptions: {
             tabSize: 4,
             lineNumbers: true,
+            indentUnit: 4,
             viewportMargin: 20,
             mode: 'javascript',
             theme: 'lesser-dark'
@@ -29,6 +30,7 @@ var vm = new Vue({
             .then(function(response) {
                 vm.cmOptions.mode = response.data.lang;
                 vm.cmOptions.tabSize = response.data.indent;
+                vm.cmOptions.indentUnit = response.data.indent;
                 vm.source = response.data.source;
             });
         }
