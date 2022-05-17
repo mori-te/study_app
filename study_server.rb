@@ -23,21 +23,8 @@ end
 
 # ruby実行・結果出力
 post '/exec_ruby' do
-  json = JSON.parse(request.body.read)
-  user = json['user']
-  source_file = "/home/#{user}/#{user}.rb"
-  File.open(source_file, 'w') do |io|
-    io.print(json['source'])
-  end
-  FileUtils.chown(user, user, [source_file])
-  result = nil
-  begin
-    IO.popen(['su', '-', user, '-c', "ruby #{source_file}", :err => [:child, :out]], 'r') do |io|
-      result = io.read
-    end
-  rescue
-    result = $!
-  end
+  source_file, user = write_source_file(request.body.read, 'rb')
+  result = exec_source_file(source_file, user, 'ruby')
   { result: result }.to_json
 end
 
@@ -74,65 +61,63 @@ end
 
 # javascript実行・結果出力
 post '/exec_js' do
-  json = JSON.parse(request.body.read)
-  user = json['user']
-  source_file = "/home/#{user}/#{user}.js"
-  File.open(source_file, 'w') do |io|
-    io.print(json['source'])
-  end
-  FileUtils.chown(user, user, [source_file])
-  result = nil
-  begin
-    IO.popen(['su', '-', user, '-c', "node #{source_file}", :err => [:child, :out]], 'r') do |io|
-      result = io.read
-    end
-  rescue
-    result = $!
-  end
+  source_file, user = write_source_file(request.body.read, 'js')
+  result = exec_source_file(source_file, user, 'node')
   { result: result }.to_json
 end
 
 # python実行・結果出力
 post '/exec_python' do
-  json = JSON.parse(request.body.read)
-  user = json['user']
-  source_file = "/home/#{user}/#{user}.py"
-  File.open(source_file, 'w') do |io|
-    io.print(json['source'])
-  end
-  FileUtils.chown(user, user, [source_file])
-  result = nil
-  begin
-    IO.popen(['su', '-', user, '-c', "python3.10 #{source_file}", :err => [:child, :out]], 'r') do |io|
-      result = io.read
-    end
-  rescue
-    result = $!
-  end
+  source_file, user = write_source_file(request.body.read, 'py')
+  result = exec_source_file(source_file, user, 'python3.10')
   { result: result }.to_json
 end
 
 # go実行・結果出力
 post '/exec_golang' do
-  json = JSON.parse(request.body.read)
-  user = json['user']
-  source_file = "/home/#{user}/#{user}.go"
-  File.open(source_file, 'w') do |io|
-    io.print(json['source'])
-  end
-  FileUtils.chown(user, user, [source_file])
-  result = nil
-  begin
-    IO.popen(['su', '-', user, '-c', "go run #{source_file}", :err => [:child, :out]], 'r') do |io|
-      result = io.read
-    end
-  rescue
-    result = $!
-  end
+  source_file, user = write_source_file(request.body.read, 'go')
+  result = exec_source_file(source_file, user, 'go run')
   { result: result }.to_json
 end
 
 get '/lang' do
   lang, indent, source = $yaml['LANG'][params['lang']]
   { lang: lang, indent: indent, source: source }.to_json
+end
+
+# ファイルアップロード
+post '/upload' do
+  name = params[:file][:filename]
+  body = params[:file][:tempfile]
+  user = params[:user]
+  file_path = "/home/#{user}/#{name}"
+  File.open(file_path, 'w') do |io|
+    io.print(body.read)
+  end
+  FileUtils.chown(user, user, [file_path])
+  ""
+end
+
+# 共通処理
+def write_source_file(body, suffix)
+  json = JSON.parse(body)
+  user = json['user']
+  source_file = "/home/#{user}/#{user}.#{suffix}"
+  File.open(source_file, 'w') do |io|
+    io.print(json['source'])
+  end
+  FileUtils.chown(user, user, [source_file])
+  [source_file, user]
+end
+
+def exec_source_file(source_file, user, cmd)
+  result = nil
+  begin
+    IO.popen(['su', '-', user, '-c', "#{cmd} #{source_file}", :err => [:child, :out]], 'r') do |io|
+      result = io.read
+    end
+  rescue
+    result = $!
+  end
+  result
 end

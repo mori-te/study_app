@@ -3,6 +3,7 @@ Vue.use(VueCodemirror);
 var vm = new Vue({
     el: "#app",
     data: {
+        user: 'mori-te',
         source: "",
         result: "-",
         lang: 'java',
@@ -13,12 +14,14 @@ var vm = new Vue({
             viewportMargin: 20,
             mode: 'javascript',
             theme: 'lesser-dark'
-        }
+        },
+        uploadfile: "",
+        isEnter: false
     },
     methods: {
         exec: function () {
             axios.post('exec_' + vm.lang, {
-                user: "mori-te",
+                user: vm.user,
                 lang: vm.lang,
                 source: vm.source
             }).then(function (response) {
@@ -33,6 +36,27 @@ var vm = new Vue({
                 vm.cmOptions.indentUnit = response.data.indent;
                 vm.source = response.data.source;
             });
+        },
+        dragEnter: function () {
+            this.isEnter = true;
+        },
+        dragLeave: function () {
+            this.isEnter = false;
+        },
+        dragOver: function () {
+            console.log("dragover");
+        },
+        dropFile: function (e) {
+            const file = e.dataTransfer.files[0]
+            let form = new FormData();
+            form.append('file', file);
+            form.append('user', vm.user);
+            axios.post("upload", form)
+            .then(function(response) {
+                console.log(response.data);
+            });
+            vm.uploadfile = `[${file["name"]}]`
+            this.isEnter = false;
         }
     },
     mounted() {
