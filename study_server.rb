@@ -92,6 +92,46 @@ post '/exec_js' do
   { result: result }.to_json
 end
 
+# python実行・結果出力
+post '/exec_python' do
+  json = JSON.parse(request.body.read)
+  user = json['user']
+  source_file = "/home/#{user}/#{user}.py"
+  File.open(source_file, 'w') do |io|
+    io.print(json['source'])
+  end
+  FileUtils.chown(user, user, [source_file])
+  result = nil
+  begin
+    IO.popen(['su', '-', user, '-c', "python3.10 #{source_file}", :err => [:child, :out]], 'r') do |io|
+      result = io.read
+    end
+  rescue
+    result = $!
+  end
+  { result: result }.to_json
+end
+
+# go実行・結果出力
+post '/exec_golang' do
+  json = JSON.parse(request.body.read)
+  user = json['user']
+  source_file = "/home/#{user}/#{user}.go"
+  File.open(source_file, 'w') do |io|
+    io.print(json['source'])
+  end
+  FileUtils.chown(user, user, [source_file])
+  result = nil
+  begin
+    IO.popen(['su', '-', user, '-c', "go run #{source_file}", :err => [:child, :out]], 'r') do |io|
+      result = io.read
+    end
+  rescue
+    result = $!
+  end
+  { result: result }.to_json
+end
+
 get '/lang' do
   lang, indent, source = $yaml['LANG'][params['lang']]
   { lang: lang, indent: indent, source: source }.to_json

@@ -23,3 +23,22 @@ LANG:
   - 4
   - |
     console.log("Hello JS World!");
+
+  'python':
+  - 'python'
+  - 2
+  - |
+    print("Hello Python3 world!")
+  
+  'golang':
+  - 'go'
+  - 2
+  - |
+    package main
+    
+    import "fmt"
+    func main() {
+      fmt.Printf("Hello Go World\n")
+    }
+
+  
