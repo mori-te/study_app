@@ -33,6 +33,12 @@
             <li class="nav-item">
               <a class="nav-link active rob-navbar" aria-current="page" href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference" target="_blank">JavaScript Docs</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link active rob-navbar" aria-current="page" href="https://docs.python.org/ja/3/library/index.html" target="_blank">Python Docs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active rob-navbar" aria-current="page" href="http://go.shibu.jp/" target="_blank">Go Docs</a>
+            </li>
           </ul>
         </div>
         <div class="dropdown">
@@ -60,19 +66,21 @@
       <div class="row">
       <div class="col-lg">
         <div class="drop_area" @dragenter="dragEnter" @dragleave="dragLeave" @dragover.prevent @drop.prevent="dropFile" :class="{enter: isEnter}">
-          ファイルアップロード（ドラッグ＆ドロップ） {{ uploadfile }}
+          データファイルのアップロード（ドラッグ＆ドロップ） {{ uploadfile }}
         </div>
       </div>
       <div class="col-lg"></div>
       </div>
       <div class="row">
         <div class="col-lg">
-          <codemirror ref="cm" v-model="source" :options="cmOptions"></codemirror>
+          <span @keydown.enter.shift.prevent="exec">
+            <codemirror ref="cm" v-model="source" :options="cmOptions"></codemirror>
+          </span>
           <br>
           <select v-model="lang" v-on:change="change" class="form-select">
             <option value="java">Java</option>
             <option value="ruby">Ruby</option>
-            <option value="js">Javascript</option>
+            <option value="js">Javascript (node)</option>
             <option value="python">Python</option>
             <option value="golang">Go</option>
           </select>
