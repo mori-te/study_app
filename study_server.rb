@@ -24,7 +24,7 @@ end
 # ruby実行・結果出力
 post '/exec_ruby' do
   source_file, user = write_source_file(request.body.read, 'rb')
-  result = exec_source_file(source_file, user, 'ruby')
+  result = exec_source_file(user, "ruby #{source_file}")
   { result: result }.to_json
 end
 
@@ -37,7 +37,6 @@ post '/exec_java' do
   source_file = "/home/#{user}/#{class_name[0]}.java"
   class_file = "/home/#{user}/#{class_name[0]}.class"
   exec_name = File.basename(source_file, '.*')
-
   File.open(source_file, 'w') do |io|
     io.print(json['source'])
   end
@@ -47,36 +46,28 @@ post '/exec_java' do
   rescue
   end
 
-  result = ''
-  begin
-    IO.popen(['su', '-', user, '-c', "javac #{source_file} && java #{exec_name}", :err => [:child, :out]], 'r') do |io|
-      result = io.read
-      result.force_encoding('CP932') if RUBY_PLATFORM =~ /mingw|mswin/
-    end
-  rescue
-    result += $!.to_s
-  end
+  result = exec_source_file(user, "javac #{source_file} && java #{exec_name}")
   { result: result }.to_json
 end
 
 # javascript実行・結果出力
 post '/exec_js' do
   source_file, user = write_source_file(request.body.read, 'js')
-  result = exec_source_file(source_file, user, 'node')
+  result = exec_source_file(user, "node #{source_file}")
   { result: result }.to_json
 end
 
 # python実行・結果出力
 post '/exec_python' do
   source_file, user = write_source_file(request.body.read, 'py')
-  result = exec_source_file(source_file, user, 'python3.10')
+  result = exec_source_file(user, "python3.10 #{source_file}")
   { result: result }.to_json
 end
 
 # go実行・結果出力
 post '/exec_golang' do
   source_file, user = write_source_file(request.body.read, 'go')
-  result = exec_source_file(source_file, user, 'go run')
+  result = exec_source_file(user, "go run #{source_file}")
   { result: result }.to_json
 end
 
@@ -110,14 +101,28 @@ def write_source_file(body, suffix)
   [source_file, user]
 end
 
-def exec_source_file(source_file, user, cmd)
+def exec_source_file(user, cmd)
   result = nil
   begin
-    IO.popen(['su', '-', user, '-c', "#{cmd} #{source_file}", :err => [:child, :out]], 'r') do |io|
+    IO.popen(['su', '-', user, '-c', "#{cmd}", :err => [:child, :out]], 'r+') do |io|
+      File.open("/home/#{user}/.input.txt", "r").each do |buf|
+        io.print(buf)
+      end
+      io.close_write
       result = io.read
     end
   rescue
     result = $!
   end
   result
+end
+
+def set_stdin_file(user, input_data)
+  input_data_file = "/home/#{user}/.input.txt"
+  File.open(input_data_file, "w") do |io|
+    input_data.each do |dat|
+      io.puts(dat)
+    end
+  end
+  FileUtils.chown(user, user, [input_data_file])
 end
