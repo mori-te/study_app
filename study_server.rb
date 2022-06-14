@@ -71,6 +71,27 @@ post '/exec_golang' do
   { result: result }.to_json
 end
 
+# COBOL実行・結果出力
+post '/exec_cobol' do
+  source_file, user = write_source_file(request.body.read, 'cbl')
+  result = exec_source_file(user, "cobc -x #{source_file} && #{source_file.sub('.cbl', '')}")
+  { result: result }.to_json
+end
+
+# CASL2実行・結果出力
+post '/exec_casl2' do
+  source_file, user = write_source_file(request.body.read, 'cas')
+  result = exec_source_file(user, "node-casl2 #{source_file} && node-comet2 -r #{source_file.sub('.cas', '.com')}")
+  { result: result }.to_json
+end
+
+# C言語実行・結果出力
+post '/exec_clang' do
+  source_file, user = write_source_file(request.body.read, 'c')
+  result = exec_source_file(user, "cc #{source_file} && ./a.out")
+  { result: result }.to_json
+end
+
 get '/lang' do
   lang, indent, source = $yaml['LANG'][params['lang']]
   { lang: lang, indent: indent, source: source }.to_json
@@ -105,6 +126,7 @@ def exec_source_file(user, cmd)
   result = nil
   begin
     IO.popen(['su', '-', user, '-c', "#{cmd}", :err => [:child, :out]], 'r+') do |io|
+      # 標準入力データ
       File.open("/home/#{user}/.input.txt", "r").each do |buf|
         io.print(buf)
       end

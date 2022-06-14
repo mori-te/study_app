@@ -41,4 +41,37 @@ LANG:
       fmt.Printf("Hello Go World\n")
     }
 
-  
+  'cobol':
+  - 'cobol'
+  - 4
+  - |
+    000010 IDENTIFICATION DIVISION.
+           PROGRAM-ID. HELLO.
+           PROCEDURE DIVISION.
+           DISPLAY "Hello COBOL World!".
+           STOP RUN.
+           END PROGRAM HELLO.
+
+  'casl2':
+  - 'casl2'
+  - 8
+  - |
+    ; hello.cas
+    MAIN    START
+            OUT     MSG,LEN
+            RET
+    MSG     DC      'Hello CASL2 World'
+    LEN     DC      17
+            END
+
+  'clang':
+  - 'clike'
+  - 4
+  - |
+    #include <stdio.h>
+
+    int main(int argc, char *argv[])
+    {
+        printf("Hello C World!\n");
+        return 0;
+    }
